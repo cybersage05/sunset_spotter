@@ -3,6 +3,8 @@ import { useGeolocation } from './hooks/useGeolocation.js'
 import { useSunMoon, useWeekSunData } from './hooks/useSunMoon.js'
 import { useWeather } from './hooks/useWeather.js'
 import { useViewpoints } from './hooks/useViewpoints.js'
+import { useAstro } from './hooks/useAstro.js'
+import { useISS } from './hooks/useISS.js'
 import SkyBackground from './components/SkyBackground.jsx'
 import PetalsCanvas from './components/PetalsCanvas.jsx'
 import DotField from './components/DotField.jsx'
@@ -15,6 +17,11 @@ import Viewpoints from './components/Viewpoints.jsx'
 import MoonCard from './components/MoonCard.jsx'
 import WeekOutlook from './components/WeekOutlook.jsx'
 import NightModeToggle from './components/NightModeToggle.jsx'
+import LightTimeline from './components/LightTimeline.jsx'
+import ConditionsCard from './components/ConditionsCard.jsx'
+import StargazingCard from './components/StargazingCard.jsx'
+import ISSCard from './components/ISSCard.jsx'
+import MapCard from './components/MapCard.jsx'
 
 export default function App() {
   const { location, status, error: geoError, setManualLocation } = useGeolocation()
@@ -23,6 +30,8 @@ export default function App() {
   const weekDays = useWeekSunData(location)
   const { hourlyAtSunset, weekScores, loading: wxLoading } = useWeather(location, weekDays)
   const { viewpoints, loading: vpLoading } = useViewpoints(location, sunData?.sunAzimuthDeg)
+  const { astro, loading: astroLoading } = useAstro(location, moonData?.fraction)
+  const iss = useISS(location)
   const heroRef = useRef(null)
   const sectionsRef = useRef([])
   const tabHidden = useRef(false)
@@ -63,18 +72,42 @@ export default function App() {
     })
   }, [])
 
-  // Scroll-reveal cards with Motion One
+  // Scroll-reveal cards: plain IntersectionObserver + CSS transition.
+  // A MutationObserver picks up cards that mount later (data-dependent ones).
   useEffect(() => {
-    import('@motionone/dom').then(({ inView, animate }) => {
+    if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
+
+    const io = new IntersectionObserver(entries => {
+      for (const e of entries) {
+        if (e.isIntersecting) {
+          e.target.classList.add('card-visible')
+          io.unobserve(e.target)
+        }
+      }
+    }, { threshold: 0.08 })
+
+    const seen = new WeakSet()
+    function observeAll() {
       document.querySelectorAll('.glass-card').forEach(el => {
-        el.style.opacity = '0'
-        el.style.transform = 'translateY(20px)'
-        inView(el, () => {
-          animate(el, { opacity: 1, transform: 'translateY(0px)' }, { duration: 0.55, easing: [0.22, 1, 0.36, 1] })
-        }, { amount: 0.1 })
+        if (seen.has(el)) return
+        seen.add(el)
+        el.classList.add('card-reveal')
+        const r = el.getBoundingClientRect()
+        if (r.top < window.innerHeight && r.bottom > 0) {
+          // Already on screen — reveal without waiting for the observer
+          // (covers background/prerendered tabs where IO frames are throttled)
+          setTimeout(() => el.classList.add('card-visible'), 60)
+        } else {
+          io.observe(el)
+        }
       })
-    })
-  }, [location, sunData])
+    }
+    observeAll()
+    const mo = new MutationObserver(observeAll)
+    mo.observe(document.body, { childList: true, subtree: true })
+
+    return () => { io.disconnect(); mo.disconnect() }
+  }, [])
 
   function toggleNight() {
     setManualNight(prev => prev === null ? !isNight : !prev)
@@ -142,6 +175,11 @@ export default function App() {
               📡 Location access denied — search for your city above to get started.
             </div>
           )}
+          {status === 'approximate' && (
+            <div className="geo-banner" style={{ background: 'rgba(255,184,108,0.1)', borderColor: 'rgba(255,184,108,0.25)', color: 'var(--bg-amber)' }}>
+              📡 Using your approximate location from IP — search above for a precise spot.
+            </div>
+          )}
           {status === 'loading' && (
             <div className="geo-banner" style={{ background: 'rgba(92,225,230,0.08)', borderColor: 'rgba(92,225,230,0.2)', color: 'var(--accent-cyan)' }}>
               🔍 Detecting your location…
@@ -160,9 +198,15 @@ export default function App() {
                 <>
                   <MoonCard moonData={moonData} />
                   <div className="grid-2">
+                    <StargazingCard astro={astro} loading={astroLoading} moonData={moonData} />
+                    <ISSCard iss={iss} />
+                  </div>
+                  <LightTimeline sunData={sunData} />
+                  <div className="grid-2">
                     <SunsetCard sunData={sunData} isNight={isNight} />
                     <Compass azimuth={sunData?.sunAzimuthDeg} />
                   </div>
+                  <MapCard location={location} viewpoints={viewpoints} sunsetAzimuth={sunData?.sunAzimuthDeg} isNight={isNight} />
                   <WeekOutlook weekDays={weekDays} weekScores={weekScores} loading={wxLoading} />
                   <Viewpoints viewpoints={viewpoints} loading={vpLoading} sunsetAzimuth={sunData?.sunAzimuthDeg} />
                 </>
@@ -173,11 +217,17 @@ export default function App() {
                     <SunsetCard sunData={sunData} isNight={isNight} />
                     <QualityScore data={hourlyAtSunset} loading={wxLoading} />
                   </div>
+                  <LightTimeline sunData={sunData} />
                   <div className="grid-2">
+                    <ConditionsCard data={hourlyAtSunset} loading={wxLoading} />
                     <Compass azimuth={sunData?.sunAzimuthDeg} />
-                    <MoonCard moonData={moonData} />
                   </div>
+                  <MapCard location={location} viewpoints={viewpoints} sunsetAzimuth={sunData?.sunAzimuthDeg} isNight={isNight} />
                   <Viewpoints viewpoints={viewpoints} loading={vpLoading} sunsetAzimuth={sunData?.sunAzimuthDeg} />
+                  <div className="grid-2">
+                    <MoonCard moonData={moonData} />
+                    <ISSCard iss={iss} />
+                  </div>
                   <WeekOutlook weekDays={weekDays} weekScores={weekScores} loading={wxLoading} />
                 </>
               )}
@@ -186,7 +236,7 @@ export default function App() {
 
           {/* Footer */}
           <footer style={{ marginTop: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-            <p>Data: SunCalc · Open-Meteo · OpenStreetMap · BigDataCloud — all free, no keys</p>
+            <p>Data: SunCalc · Open-Meteo (weather · air quality · geocoding) · OpenStreetMap & Overpass · CARTO tiles · BigDataCloud · ipwho.is · WhereTheISS.at — all free & open, no keys</p>
             <p style={{ marginTop: 4 }}>薄明 Hakumei · Made with ♡</p>
           </footer>
         </main>

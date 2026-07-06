@@ -1,6 +1,21 @@
 import { useState, useEffect, useRef } from 'react'
 
-const OVERPASS = 'https://overpass-api.de/api/interpreter'
+// Public Overpass endpoints — tried in order, the main one can be flaky
+const OVERPASS_MIRRORS = [
+  'https://overpass-api.de/api/interpreter',
+  'https://overpass.kumi.systems/api/interpreter',
+  'https://overpass.private.coffee/api/interpreter',
+]
+
+async function fetchOverpass(query) {
+  for (const url of OVERPASS_MIRRORS) {
+    try {
+      const r = await fetch(url, { method: 'POST', body: query })
+      if (r.ok) return await r.json()
+    } catch { /* try next mirror */ }
+  }
+  throw new Error('All Overpass mirrors failed')
+}
 
 function bearing(lat1, lon1, lat2, lon2) {
   const toRad = d => d * Math.PI / 180
@@ -57,8 +72,7 @@ export function useViewpoints(location, sunsetAzimuth) {
 );
 out body 40;`
 
-    fetch(OVERPASS, { method: 'POST', body: query })
-      .then(r => r.ok ? r.json() : Promise.reject())
+    fetchOverpass(query)
       .then(data => {
         cacheRef.current[key] = data.elements || []
         rankAndSet(cacheRef.current[key], location, sunsetAzimuth)

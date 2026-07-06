@@ -178,6 +178,13 @@ body {
 /* ── Animation init class ── */
 .fade-up-init { opacity: 0; transform: translateY(24px); }
 
+/* ── Card scroll-reveal ── */
+.card-reveal {
+  transition: opacity 0.55s cubic-bezier(0.22,1,0.36,1), transform 0.55s cubic-bezier(0.22,1,0.36,1),
+    box-shadow 0.25s ease, border-color 0.25s ease;
+}
+.card-reveal:not(.card-visible) { opacity: 0; transform: translateY(22px); }
+
 /* ── Fixed night toggle ── */
 .night-toggle { position: fixed; top: 1rem; right: 1rem; z-index: 200; }
 
@@ -217,3 +224,79 @@ body {
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: transparent; }
 ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 3px; }
+
+/* ── Light timeline ── */
+.timeline-wrap { position: relative; padding-bottom: 5.6rem; }
+.timeline-bar {
+  position: relative; height: 18px; border-radius: 9px;
+  border: 1px solid rgba(255,255,255,0.12); overflow: visible;
+  box-shadow: 0 2px 12px rgba(0,0,0,0.25) inset;
+}
+.timeline-now {
+  position: absolute; top: -6px; bottom: -6px; width: 2px;
+  background: var(--text-primary); transform: translateX(-50%); border-radius: 1px;
+  box-shadow: 0 0 8px rgba(255,255,255,0.6);
+}
+.timeline-now-dot {
+  position: absolute; top: -5px; left: 50%; transform: translateX(-50%);
+  width: 8px; height: 8px; border-radius: 50%; background: var(--text-primary);
+  box-shadow: 0 0 10px rgba(255,255,255,0.8);
+}
+.timeline-markers { position: absolute; left: 0; right: 0; top: 22px; height: 4rem; }
+.timeline-marker { position: absolute; transform: translateX(-50%); text-align: center; }
+.timeline-tick { width: 1px; height: 7px; background: var(--text-muted); margin: 0 auto 3px; }
+.timeline-marker-label { display: flex; flex-direction: column; font-size: 0.66rem; color: var(--text-secondary); white-space: nowrap; }
+.timeline-marker-time { color: var(--text-muted); font-size: 0.62rem; }
+@media (max-width: 520px) { .timeline-marker-label span:first-child { display: none; } }
+
+/* ── Stat tiles (conditions card) ── */
+.stat-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.6rem; }
+@media (max-width: 720px) { .stat-grid { grid-template-columns: repeat(2, 1fr); } }
+.stat-tile {
+  text-align: center; padding: 0.75rem 0.4rem; border-radius: var(--radius-sm);
+  background: rgba(255,255,255,0.04); border: 1px solid var(--card-border);
+  transition: border-color 0.2s;
+}
+.stat-tile:hover { border-color: var(--accent-cyan); }
+
+/* ── Live dot (ISS) ── */
+.live-dot {
+  display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+  background: var(--score-high); margin-left: 4px;
+  animation: live-pulse 1.6s ease-in-out infinite;
+}
+@keyframes live-pulse { 0%,100% { opacity: 1; box-shadow: 0 0 0 0 rgba(123,237,159,0.5); } 50% { opacity: 0.5; box-shadow: 0 0 0 5px rgba(123,237,159,0); } }
+@media (prefers-reduced-motion: reduce) { .live-dot { animation: none; } }
+
+/* ── Map ── */
+.map-container {
+  height: 340px; border-radius: var(--radius-sm); overflow: hidden;
+  position: relative; z-index: 0;
+  border: 1px solid var(--card-border);
+}
+@media (max-width: 640px) { .map-container { height: 280px; } }
+.map-marker-user {
+  width: 18px; height: 18px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff9e6, var(--bg-amber));
+  border: 2px solid #fff; box-shadow: 0 0 12px 4px rgba(255,184,108,0.7);
+  animation: live-pulse 2s ease-in-out infinite;
+}
+.map-marker-vp {
+  width: 30px; height: 30px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 15px; background: rgba(26,18,69,0.9);
+  border: 1.5px solid var(--bg-rose); box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+[data-theme="night"] .map-marker-vp { background: rgba(10,10,31,0.92); border-color: var(--bg-mid); }
+.leaflet-popup-content-wrapper {
+  background: rgba(26,18,69,0.95) !important; color: var(--text-primary) !important;
+  border-radius: 10px !important; backdrop-filter: blur(12px);
+  border: 1px solid var(--card-border); font-family: var(--font-body) !important;
+}
+[data-theme="night"] .leaflet-popup-content-wrapper { background: rgba(10,10,31,0.95) !important; }
+.leaflet-popup-tip { background: rgba(26,18,69,0.95) !important; }
+[data-theme="night"] .leaflet-popup-tip { background: rgba(10,10,31,0.95) !important; }
+.leaflet-popup-content a { color: var(--accent-cyan); }
+.leaflet-container { font-family: var(--font-body) !important; background: var(--bg-deep) !important; }
+.leaflet-bar a { background: rgba(26,18,69,0.9) !important; color: var(--text-primary) !important; border-color: var(--card-border) !important; }
+.leaflet-bar a:hover { background: rgba(255,255,255,0.1) !important; }
