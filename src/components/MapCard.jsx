@@ -8,6 +8,14 @@ const TILES = {
 }
 const ATTRIBUTION = '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> &copy; <a href="https://carto.com/attributions">CARTO</a>'
 
+// NASA GIBS — yesterday's MODIS true-colour imagery (today's is incomplete)
+function gibsUrl() {
+  const d = new Date()
+  d.setDate(d.getDate() - 1)
+  const date = d.toISOString().slice(0, 10)
+  return `https://gibs.earthdata.nasa.gov/wmts/epsg3857/best/MODIS_Terra_CorrectedReflectance_TrueColor/default/${date}/GoogleMapsCompatible_Level9/{z}/{y}/{x}.jpg`
+}
+
 // Destination point given start, bearing (deg) and distance (km)
 function destination(lat, lon, bearingDeg, distKm) {
   const R = 6371
@@ -24,6 +32,8 @@ export default function MapCard({ location, viewpoints, sunsetAzimuth, isNight }
   const containerRef = useRef(null)
   const mapRef = useRef(null)
   const tileRef = useRef(null)
+  const satRef = useRef(null)
+  const controlRef = useRef(null)
   const layerRef = useRef(null)
 
   // Create map once
@@ -39,15 +49,27 @@ export default function MapCard({ location, viewpoints, sunsetAzimuth, isNight }
     return () => { map.remove(); mapRef.current = null }
   }, [])
 
-  // Swap tiles with theme
+  // Swap base tiles with theme + NASA GIBS satellite option
   useEffect(() => {
     const map = mapRef.current
     if (!map) return
+    if (controlRef.current) map.removeControl(controlRef.current)
     if (tileRef.current) map.removeLayer(tileRef.current)
+    if (satRef.current) map.removeLayer(satRef.current)
+
     tileRef.current = L.tileLayer(isNight ? TILES.night : TILES.day, {
       attribution: ATTRIBUTION,
       maxZoom: 19,
     }).addTo(map)
+    satRef.current = L.tileLayer(gibsUrl(), {
+      attribution: '<a href="https://earthdata.nasa.gov/gibs">NASA GIBS</a> / MODIS Terra',
+      maxZoom: 9,
+    })
+    controlRef.current = L.control.layers(
+      { 'Map': tileRef.current, '🛰️ NASA Satellite': satRef.current },
+      null,
+      { position: 'topright' },
+    ).addTo(map)
   }, [isNight])
 
   // Markers + sunset ray

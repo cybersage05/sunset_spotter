@@ -5,6 +5,7 @@ import { useWeather } from './hooks/useWeather.js'
 import { useViewpoints } from './hooks/useViewpoints.js'
 import { useAstro } from './hooks/useAstro.js'
 import { useISS } from './hooks/useISS.js'
+import { useApod, useAsteroids, useEpic, useEonet, useSpaceWeather, useLaunches, useAstronauts, useQuakes, usePlanet } from './hooks/useCosmic.js'
 import SkyBackground from './components/SkyBackground.jsx'
 import PetalsCanvas from './components/PetalsCanvas.jsx'
 import DotField from './components/DotField.jsx'
@@ -22,6 +23,15 @@ import ConditionsCard from './components/ConditionsCard.jsx'
 import StargazingCard from './components/StargazingCard.jsx'
 import ISSCard from './components/ISSCard.jsx'
 import MapCard from './components/MapCard.jsx'
+import ApodCard from './components/ApodCard.jsx'
+import LaunchesCard from './components/LaunchesCard.jsx'
+import AsteroidsCard from './components/AsteroidsCard.jsx'
+import SpaceWeatherCard from './components/SpaceWeatherCard.jsx'
+import HumansCard from './components/HumansCard.jsx'
+import QuakesCard from './components/QuakesCard.jsx'
+import EonetCard from './components/EonetCard.jsx'
+import EpicCard from './components/EpicCard.jsx'
+import PlanetCard from './components/PlanetCard.jsx'
 
 export default function App() {
   const { location, status, error: geoError, setManualLocation } = useGeolocation()
@@ -32,6 +42,15 @@ export default function App() {
   const { viewpoints, loading: vpLoading } = useViewpoints(location, sunData?.sunAzimuthDeg)
   const { astro, loading: astroLoading } = useAstro(location, moonData?.fraction)
   const iss = useISS(location)
+  const { data: apod, loading: apodLoading } = useApod()
+  const { data: neo, loading: neoLoading } = useAsteroids()
+  const { data: epic, loading: epicLoading } = useEpic(location?.lon)
+  const { events: eonetEvents, loading: eonetLoading } = useEonet(location)
+  const { kp, flare, loading: swLoading } = useSpaceWeather()
+  const { data: launches, loading: launchesLoading } = useLaunches()
+  const { data: crew, loading: crewLoading } = useAstronauts()
+  const { quakes, loading: quakesLoading } = useQuakes(location)
+  const { data: planet, loading: planetLoading } = usePlanet()
   const heroRef = useRef(null)
   const sectionsRef = useRef([])
   const tabHidden = useRef(false)
@@ -113,8 +132,6 @@ export default function App() {
     setManualNight(prev => prev === null ? !isNight : !prev)
   }
 
-  const tategakiDay = '薄明 夕焼け 黄昏'
-  const tategakiNight = '月夜 星空 深夜'
 
   return (
     <>
@@ -126,8 +143,8 @@ export default function App() {
         {/* ── Top nav ── */}
         <nav className="top-nav" role="navigation" aria-label="Site navigation">
           <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
-            <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.1rem', fontWeight: 700, color: 'var(--bg-amber)' }}>
-              薄明
+            <span style={{ fontFamily: 'var(--font-display)', fontSize: '1.05rem', fontWeight: 700, color: 'var(--bg-amber)', whiteSpace: 'nowrap' }}>
+              ✦ Cosmic Verse
             </span>
             {location?.name && (
               <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', maxWidth: 180, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
@@ -144,20 +161,13 @@ export default function App() {
         {/* ── Hero ── */}
         <header className="hero-section" ref={heroRef}>
           <div className="fade-up-init" style={{ position: 'relative' }}>
-            <div
-              aria-hidden="true"
-              className="tategaki"
-              style={{ fontSize: '0.78rem' }}
-            >
-              {isNight ? tategakiNight : tategakiDay}
-            </div>
             <h1 className="title-display hero-title fade-up-init">
-              {isNight ? '月夜' : '薄明'}
+              Cosmic Verse
             </h1>
             <p className="hero-subtitle fade-up-init">
               {isNight
-                ? 'Moon & Night Mode — stars are out'
-                : 'Tonight\'s sunset, scored & mapped'}
+                ? 'Moon, stars & the cosmos over your head tonight'
+                : 'Tonight\'s sunset scored & mapped — plus the whole cosmos'}
             </p>
             {location?.name && (
               <p className="fade-up-init" style={{ fontSize: '0.88rem', color: 'var(--text-muted)', marginTop: 4 }}>
@@ -234,10 +244,39 @@ export default function App() {
             </>
           )}
 
+          {/* ── The Cosmos Today ── */}
+          <div className="cosmos-divider" role="heading" aria-level={2}>
+            <span className="cosmos-divider-line" />
+            <span className="cosmos-divider-text">✦ The Cosmos Today ✦</span>
+            <span className="cosmos-divider-line" />
+          </div>
+
+          <ApodCard apod={apod} loading={apodLoading} />
+          <div className="grid-2">
+            <LaunchesCard launches={launches} loading={launchesLoading} />
+            <AsteroidsCard neo={neo} loading={neoLoading} />
+          </div>
+          <div className="grid-2">
+            <SpaceWeatherCard kp={kp} flare={flare} loading={swLoading} />
+            <HumansCard crew={crew} loading={crewLoading} />
+          </div>
+          <div className="grid-2">
+            <QuakesCard quakes={quakes} loading={quakesLoading} />
+            <EonetCard events={eonetEvents} loading={eonetLoading} />
+          </div>
+          <div className="grid-2">
+            <EpicCard epic={epic} loading={epicLoading} />
+            <PlanetCard planet={planet} loading={planetLoading} />
+          </div>
+
           {/* Footer */}
           <footer style={{ marginTop: '2rem', textAlign: 'center', color: 'var(--text-muted)', fontSize: '0.75rem' }}>
-            <p>Data: SunCalc · Open-Meteo (weather · air quality · geocoding) · OpenStreetMap & Overpass · CARTO tiles · BigDataCloud · ipwho.is · WhereTheISS.at — all free & open, no keys</p>
-            <p style={{ marginTop: 4 }}>薄明 Hakumei · Made with ♡</p>
+            <p>
+              Data: SunCalc · Open-Meteo · OpenStreetMap & Overpass · CARTO · BigDataCloud · ipwho.is ·
+              NASA (APOD · NeoWs · EPIC · EONET · GIBS) · NOAA SWPC · The Space Devs · USGS ·
+              WhereTheISS.at · Solar System OpenData — all free & open
+            </p>
+            <p style={{ marginTop: 4 }}>✦ Cosmic Verse · Made with ♡</p>
           </footer>
         </main>
       </div>

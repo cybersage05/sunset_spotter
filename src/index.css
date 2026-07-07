@@ -15,8 +15,8 @@
   --score-high: #7bed9f;
   --score-mid: #ffb86c;
   --score-low: #ff6b9d;
-  --font-display: 'Shippori Mincho', serif;
-  --font-body: 'Zen Kaku Gothic New', sans-serif;
+  --font-display: 'Space Grotesk', sans-serif;
+  --font-body: 'Inter', sans-serif;
   --radius: 16px;
   --radius-sm: 10px;
 }
@@ -76,6 +76,7 @@ body {
 /* ── Layout ── */
 .main-content { position: relative; z-index: 10; width: 100%; max-width: 900px; margin: 0 auto; padding: 0 1.25rem 4rem; }
 .grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+.grid-2 > * { min-width: 0; }
 @media (max-width: 640px) { .grid-2 { grid-template-columns: 1fr; } }
 
 /* ── Orbs ── */
@@ -94,14 +95,30 @@ body {
 @keyframes orb-pulse { 0%,100% { transform: scale(1); } 50% { transform: scale(1.04); } }
 @media (prefers-reduced-motion: reduce) { .orb-sun, .orb-moon { animation: none; } }
 
-/* ── Vertical Japanese text ── */
-.tategaki {
-  writing-mode: vertical-rl; text-orientation: mixed;
-  font-family: var(--font-display); font-size: 0.9rem; letter-spacing: 0.25em;
-  color: var(--text-muted); position: absolute; right: 1.5rem; top: 50%;
-  transform: translateY(-50%); pointer-events: none; user-select: none;
+/* ── Cosmos section divider ── */
+.cosmos-divider {
+  display: flex; align-items: center; gap: 1rem;
+  margin: 2.5rem 0 1.5rem;
 }
-@media (max-width: 480px) { .tategaki { display: none; } }
+.cosmos-divider-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--card-border), transparent); }
+.cosmos-divider-text {
+  font-family: var(--font-display); font-size: 1.2rem; font-weight: 600;
+  color: var(--bg-amber); letter-spacing: 0.06em; white-space: nowrap;
+}
+
+/* ── Space imagery ── */
+.apod-img {
+  width: 100%; max-height: 420px; object-fit: cover;
+  border-radius: var(--radius-sm); border: 1px solid var(--card-border);
+  display: block; transition: opacity 0.3s;
+}
+.apod-img:hover { opacity: 0.92; }
+.epic-img {
+  width: 100%; aspect-ratio: 1; object-fit: cover;
+  border-radius: 50%; border: 1px solid var(--card-border);
+  display: block; max-width: 280px; margin: 0 auto;
+  box-shadow: 0 0 40px rgba(92,225,230,0.15);
+}
 
 /* ── Countdown ── */
 .countdown-display { font-family: var(--font-display); font-size: 2.2rem; font-weight: 600; color: var(--bg-amber); letter-spacing: 0.04em; }
