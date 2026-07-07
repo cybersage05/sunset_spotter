@@ -64,7 +64,7 @@ npm install
 npm run dev
 ```
 
-Then open the URL Vite prints (the app is served under `/sunset_spotter/`).
+Then open the URL Vite prints (the app is served under `/cosmic-verse/`).
 
 ## Build & deploy
 
